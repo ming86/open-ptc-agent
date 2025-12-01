@@ -12,14 +12,19 @@ This script:
 Run with:
     python test_execute_code_storage.py
 """
+from __future__ import annotations
 
 import asyncio
 import sys
 import traceback
 import importlib.util
+from pathlib import Path
+
+# Get project root directory (parent of tests/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 # Add project to path
-sys.path.insert(0, "/Users/chen/projects/codeact-mcp")
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.ptc_core.session import SessionManager
 from src.ptc_core.config import CoreConfig
@@ -36,13 +41,13 @@ def load_module_from_path(module_name, file_path):
 # Load execute_code tool directly
 execute_module = load_module_from_path(
     "execute_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/code_execution/execute.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "code_execution" / "execute.py")
 )
 create_execute_code_tool = execute_module.create_execute_code_tool
 
 
-class TestResult:
-    """Track test results."""
+class __TestResult:
+    """Track test results (prefixed with _ to avoid pytest collection)."""
     def __init__(self):
         self.passed = 0
         self.failed = 0
@@ -103,7 +108,7 @@ async def setup_environment():
     return session, sandbox, execute_code_tool
 
 
-async def install_sandbox_dependencies(sandbox, results: TestResult):
+async def install_sandbox_dependencies(sandbox, results: _TestResult):
     """Install required packages in the sandbox."""
     print("\n" + "=" * 60)
     print("SETUP: Installing sandbox dependencies")
@@ -140,7 +145,7 @@ else:
         traceback.print_exc()
 
 
-async def run_basic_execution(execute_code_tool, results: TestResult):
+async def run_basic_execution(execute_code_tool, results: _TestResult):
     """Test basic code execution without charts."""
     print("\n" + "=" * 60)
     print("TEST: Basic code execution")
@@ -165,7 +170,7 @@ print(f"Result: {x}")
         traceback.print_exc()
 
 
-async def run_matplotlib_show(execute_code_tool, results: TestResult):
+async def run_matplotlib_show(execute_code_tool, results: _TestResult):
     """Test matplotlib chart with plt.show() - captured via artifacts."""
     print("\n" + "=" * 60)
     print("TEST: Matplotlib plt.show() chart (artifact capture)")
@@ -210,7 +215,7 @@ print("Chart generated with plt.show()")
         traceback.print_exc()
 
 
-async def run_matplotlib_savefig(execute_code_tool, results: TestResult):
+async def run_matplotlib_savefig(execute_code_tool, results: _TestResult):
     """Test matplotlib chart saved with plt.savefig() - detected via files_created."""
     print("\n" + "=" * 60)
     print("TEST: Matplotlib plt.savefig() chart (file detection)")
@@ -258,7 +263,7 @@ print("Saved bar_chart.png to results/")
         traceback.print_exc()
 
 
-async def run_multiple_images(execute_code_tool, results: TestResult):
+async def run_multiple_images(execute_code_tool, results: _TestResult):
     """Test multiple image generation and upload."""
     print("\n" + "=" * 60)
     print("TEST: Multiple images")
@@ -324,7 +329,7 @@ print("Generated 3 charts: trig_chart.png, scatter_chart.png, pie_chart.png")
         traceback.print_exc()
 
 
-async def run_pil_image(execute_code_tool, results: TestResult):
+async def run_pil_image(execute_code_tool, results: _TestResult):
     """Test PIL image generation and upload."""
     print("\n" + "=" * 60)
     print("TEST: PIL image generation")
@@ -366,7 +371,7 @@ print("Created PIL test image")
         traceback.print_exc()
 
 
-async def run_storage_url_format(execute_code_tool, results: TestResult):
+async def run_storage_url_format(execute_code_tool, results: _TestResult):
     """Verify storage URL format in response."""
     print("\n" + "=" * 60)
     print("TEST: Storage URL format validation")
@@ -413,7 +418,7 @@ print("Chart saved for URL test")
         traceback.print_exc()
 
 
-async def run_execution_result_charts(sandbox, results: TestResult):
+async def run_execution_result_charts(sandbox, results: _TestResult):
     """Test that ExecutionResult properly captures charts."""
     print("\n" + "=" * 60)
     print("TEST: ExecutionResult charts field")
@@ -457,7 +462,7 @@ print("Testing charts field")
         traceback.print_exc()
 
 
-async def run_error_handling(execute_code_tool, results: TestResult):
+async def run_error_handling(execute_code_tool, results: _TestResult):
     """Test error handling in code execution."""
     print("\n" + "=" * 60)
     print("TEST: Error handling")
@@ -500,7 +505,7 @@ async def main():
     print("EXECUTE CODE + STORAGE UPLOAD TEST")
     print("=" * 60)
 
-    results = TestResult()
+    results = _TestResult()
     session = None
 
     try:
@@ -535,6 +540,12 @@ async def main():
 
         # Return exit code
         return 0 if results.failed == 0 else 1
+
+
+def test_module_imports():
+    """Pytest test to verify that execute_code tool module loads correctly."""
+    assert create_execute_code_tool is not None, "create_execute_code_tool should be importable"
+    assert callable(create_execute_code_tool), "create_execute_code_tool should be callable"
 
 
 if __name__ == "__main__":

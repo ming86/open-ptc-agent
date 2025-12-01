@@ -7,6 +7,7 @@ Glob, Grep, and Bash tools to find documentation and resources in the sandbox.
 
 Results are stored in test_output/ for comparison.
 """
+from __future__ import annotations
 
 import asyncio
 import json
@@ -19,8 +20,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import importlib.util
 
+# Get project root directory (parent of tests/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 # Add project to path
-sys.path.insert(0, "/Users/chen/projects/codeact-mcp")
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.ptc_core.session import SessionManager
 from src.ptc_core.config import CoreConfig
@@ -35,15 +39,15 @@ def load_module_from_path(module_name, file_path):
 
 glob_module = load_module_from_path(
     "glob_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/search/glob.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "search" / "glob.py")
 )
 grep_module = load_module_from_path(
     "grep_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/search/grep.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "search" / "grep.py")
 )
 bash_module = load_module_from_path(
     "bash_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/bash/execute.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "bash" / "execute.py")
 )
 
 create_glob_tool = glob_module.create_glob_tool
@@ -51,8 +55,8 @@ create_grep_tool = grep_module.create_grep_tool
 create_execute_bash_tool = bash_module.create_execute_bash_tool
 
 
-class TestResult:
-    """Capture results for a single tool test."""
+class __TestResult:
+    """Capture results for a single tool test (prefixed with _ to avoid pytest collection)."""
     def __init__(self):
         self.success = False
         self.result_count = 0
@@ -77,7 +81,7 @@ class ScenarioResult:
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
-        self.tools_tested: Dict[str, TestResult] = {}
+        self.tools_tested: Dict[str, _TestResult] = {}
 
     def to_dict(self) -> Dict:
         return {
@@ -145,9 +149,9 @@ class BaselineResults:
         }
 
 
-async def run_tool_test(tool, params: Dict, validator_func) -> TestResult:
+async def run_tool_test(tool, params: Dict, validator_func) -> _TestResult:
     """Run a single tool test and capture results."""
-    result = TestResult()
+    result = _TestResult()
     result.params = params
 
     start_time = time.time()
@@ -492,7 +496,7 @@ async def main():
     session = None
 
     # Create output directory
-    output_dir = Path("/Users/chen/projects/codeact-mcp/test_output")
+    output_dir = PROJECT_ROOT / "test_output"
     output_dir.mkdir(exist_ok=True)
 
     try:
@@ -571,6 +575,16 @@ async def main():
             print(f"  {tool}: {stats['success_rate']*100:.0f}% success, {stats['avg_duration_ms']:.0f}ms avg")
 
         return 0 if passed == total else 1
+
+
+def test_module_imports():
+    """Pytest test to verify that tool modules load correctly."""
+    assert create_glob_tool is not None, "create_glob_tool should be importable"
+    assert create_grep_tool is not None, "create_grep_tool should be importable"
+    assert create_execute_bash_tool is not None, "create_execute_bash_tool should be importable"
+    assert callable(create_glob_tool), "create_glob_tool should be callable"
+    assert callable(create_grep_tool), "create_grep_tool should be callable"
+    assert callable(create_execute_bash_tool), "create_execute_bash_tool should be callable"
 
 
 if __name__ == "__main__":

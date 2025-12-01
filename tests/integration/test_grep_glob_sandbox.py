@@ -13,10 +13,14 @@ import asyncio
 import sys
 import traceback
 import importlib.util
+from pathlib import Path
 from typing import Any
 
+# Get project root directory (parent of tests/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 # Add project to path
-sys.path.insert(0, "/Users/chen/projects/codeact-mcp")
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.ptc_core.session import SessionManager
 from src.ptc_core.config import CoreConfig
@@ -31,18 +35,18 @@ def load_module_from_path(module_name, file_path):
 
 glob_module = load_module_from_path(
     "glob_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/search/glob.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "search" / "glob.py")
 )
 grep_module = load_module_from_path(
     "grep_tool",
-    "/Users/chen/projects/codeact-mcp/src/agent/tools/search/grep.py"
+    str(PROJECT_ROOT / "src" / "agent" / "tools" / "search" / "grep.py")
 )
 create_glob_tool = glob_module.create_glob_tool
 create_grep_tool = grep_module.create_grep_tool
 
 
-class TestResult:
-    """Track test results."""
+class _TestResult:
+    """Track test results (prefixed with _ to avoid pytest collection)."""
     def __init__(self):
         self.passed = 0
         self.failed = 0
@@ -170,7 +174,7 @@ def nested_function():
         print(f"   Error listing files: {e}")
 
 
-async def run_glob_tool(glob_tool, sandbox, results: TestResult):
+async def run_glob_tool(glob_tool, sandbox, results: _TestResult):
     """Test the Glob tool."""
     print("\n" + "=" * 60)
     print("TESTING: Glob Tool")
@@ -248,7 +252,7 @@ async def run_glob_tool(glob_tool, sandbox, results: TestResult):
         traceback.print_exc()
 
 
-async def run_grep_tool(grep_tool, sandbox, results: TestResult):
+async def run_grep_tool(grep_tool, sandbox, results: _TestResult):
     """Test the Grep tool."""
     print("\n" + "=" * 60)
     print("TESTING: Grep Tool")
@@ -371,7 +375,7 @@ async def run_grep_tool(grep_tool, sandbox, results: TestResult):
         traceback.print_exc()
 
 
-async def investigate_diagnostics(sandbox, results: TestResult):
+async def investigate_diagnostics(sandbox, results: _TestResult):
     """Deep diagnostic investigation if tools are failing."""
     print("\n" + "=" * 60)
     print("DIAGNOSTICS: Deep investigation")
@@ -455,7 +459,7 @@ async def main():
     print("GREP/GLOB SANDBOX TEST")
     print("=" * 60)
 
-    results = TestResult()
+    results = _TestResult()
     session = None
 
     try:
@@ -487,6 +491,14 @@ async def main():
 
         # Return exit code
         return 0 if results.failed == 0 else 1
+
+
+def test_module_imports():
+    """Pytest test to verify that glob and grep tool modules load correctly."""
+    assert create_glob_tool is not None, "create_glob_tool should be importable"
+    assert create_grep_tool is not None, "create_grep_tool should be importable"
+    assert callable(create_glob_tool), "create_glob_tool should be callable"
+    assert callable(create_grep_tool), "create_grep_tool should be callable"
 
 
 if __name__ == "__main__":
