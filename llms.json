@@ -15,7 +15,7 @@
       }
     },
     "gpt-5.1-codex-mini": {
-      "model_id": "gpt-5.1-codex",
+      "model_id": "gpt-5.1-codex-mini",
       "provider": "openai",
       "sdk": "langchain_openai.ChatOpenAI",
       "api_key_env": "OPENAI_API_KEY",
@@ -47,9 +47,14 @@
       "sdk": "langchain_anthropic.ChatAnthropic",
       "api_key_env": "ANTHROPIC_API_KEY"
     },
-
     "gemini-3-pro": {
       "model_id": "gemini-3-pro-preview",
+      "provider": "google",
+      "sdk": "langchain_google_genai.ChatGoogleGenerativeAI",
+      "api_key_env": "GEMINI_API_KEY"
+    },
+    "gemini-3-pro-image": {
+      "model_id": "gemini-3-pro-image-preview",
       "provider": "google",
       "sdk": "langchain_google_genai.ChatGoogleGenerativeAI",
       "api_key_env": "GEMINI_API_KEY"

@@ -4,7 +4,7 @@ This backend delegates all filesystem and execution operations to PTCSandbox,
 enabling deepagent's built-in tools to work with Daytona sandboxes.
 """
 
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional
 
 import structlog
 from deepagents.backends.protocol import WriteResult, EditResult
@@ -191,7 +191,7 @@ class DaytonaBackend:
         pattern: str,
         path: Optional[str] = None,
         glob: Optional[str] = None,
-    ) -> Union[List[dict], str]:
+    ) -> List[dict]:
         """Search file contents with regex pattern.
 
         Args:
@@ -236,15 +236,38 @@ class DaytonaBackend:
                                 })
                 return matches
             elif isinstance(result, list):
-                # Already in list format, ensure GrepMatch structure
-                return [
-                    {"path": m.get("path", ""), "line": m.get("line", 0), "text": m.get("text", "")}
-                    for m in result
-                ]
+                # Already in list format - could be strings or dicts
+                matches = []
+                for m in result:
+                    if isinstance(m, str):
+                        # Parse string format "path:line:text"
+                        if ':' in m:
+                            parts = m.split(':', 2)
+                            if len(parts) >= 3:
+                                try:
+                                    matches.append({
+                                        "path": parts[0],
+                                        "line": int(parts[1]),
+                                        "text": parts[2]
+                                    })
+                                except ValueError:
+                                    matches.append({
+                                        "path": parts[0],
+                                        "line": 0,
+                                        "text": ':'.join(parts[1:])
+                                    })
+                    elif isinstance(m, dict):
+                        # Already GrepMatch dict format
+                        matches.append({
+                            "path": m.get("path", ""),
+                            "line": m.get("line", 0),
+                            "text": m.get("text", "")
+                        })
+                return matches
             return []
         except Exception as e:
             logger.error(f"Failed to grep content: {e}")
-            return f"Invalid regex pattern: {str(e)}"
+            return []  # Return empty list on error for type consistency
 
     def glob_info(self, pattern: str, path: str = "/") -> List[dict]:
         """Find files matching glob pattern.

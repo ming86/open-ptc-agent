@@ -4,6 +4,7 @@ import asyncio
 import base64
 import hashlib
 import json
+import textwrap
 import time
 from dataclasses import dataclass, field
 from functools import partial
@@ -175,7 +176,7 @@ class PTCSandbox:
             .run_commands(
                 # Install system dependencies including ripgrep for fast search
                 "apt-get update",
-                "apt-get install -y curl ripgrep",
+                "apt-get install -y curl ripgrep jq git unzip",
                 # Install uv for fast Python package management
                 "curl -LsSf https://astral.sh/uv/install.sh | sh",
                 "mv /root/.local/bin/uv /usr/local/bin/uv",
@@ -919,16 +920,17 @@ class PTCSandbox:
             full_command = f"cd {working_dir} && {command}"
 
             # Create a shell script with metadata header for logging
-            script_content = f"""#!/bin/bash
-# Bash Execution Log
-# ID: {bash_id}
-# Working Directory: {working_dir}
-# Timestamp: {timestamp}
-# Command Hash: {command_hash}
+            script_content = textwrap.dedent(f"""\
+                #!/bin/bash
+                # Bash Execution Log
+                # ID: {bash_id}
+                # Working Directory: {working_dir}
+                # Timestamp: {timestamp}
+                # Command Hash: {command_hash}
 
-set -e  # Exit on error (optional, can be removed for more lenient execution)
-{full_command}
-"""
+                set -e  # Exit on error (optional, can be removed for more lenient execution)
+                {full_command}
+            """)
 
             # Write script to code/ directory for persistent logging
             # Use relative path for upload (Daytona SDK handles it relative to work_dir)
@@ -945,27 +947,27 @@ set -e  # Exit on error (optional, can be removed for more lenient execution)
 
             # Execute the script using the sandbox's execution method
             # Since Daytona SDK uses process.execute, we'll use Python to run bash
-            python_wrapper = f"""
-import subprocess
-import sys
+            python_wrapper = textwrap.dedent(f"""\
+                import subprocess
+                import sys
 
-try:
-    result = subprocess.run(
-        ['bash', '{script_absolute_path}'],
-        capture_output=True,
-        text=True,
-        timeout={timeout}
-    )
-    print(result.stdout, end='')
-    sys.stderr.write(result.stderr)
-    sys.exit(result.returncode)
-except subprocess.TimeoutExpired:
-    sys.stderr.write(f"Command timed out after {timeout} seconds")
-    sys.exit(124)
-except Exception as e:
-    sys.stderr.write(f"Error executing command: {{e}}")
-    sys.exit(1)
-"""
+                try:
+                    result = subprocess.run(
+                        ['bash', '{script_absolute_path}'],
+                        capture_output=True,
+                        text=True,
+                        timeout={timeout}
+                    )
+                    print(result.stdout, end='')
+                    sys.stderr.write(result.stderr)
+                    sys.exit(result.returncode)
+                except subprocess.TimeoutExpired:
+                    sys.stderr.write(f"Command timed out after {timeout} seconds")
+                    sys.exit(124)
+                except Exception as e:
+                    sys.stderr.write(f"Error executing command: {{e}}")
+                    sys.exit(1)
+            """)
 
             # Execute via Python wrapper
             result = await self.execute(python_wrapper)
@@ -1434,35 +1436,35 @@ except Exception as e:
             # Normalize path for sandbox
             search_path = self._normalize_search_path(path)
 
-            # Make glob recursive by default (like find command)
-            # Convert "*.py" to "**/*.py" if no ** already present
-            if "**" not in pattern:
+            # Make glob recursive by default only for simple patterns (like "*.py")
+            # Don't add ** if pattern already contains a path (has "/")
+            if "**" not in pattern and "/" not in pattern:
                 pattern = f"**/{pattern}"
 
             # Build Python code to execute glob in sandbox
             # This properly supports ** recursive patterns and mtime sorting
-            glob_code = f'''import glob
-import os
+            glob_code = textwrap.dedent(f'''\
+                import glob
+                import os
 
-pattern = "{pattern}"
-search_path = "{search_path}"
+                pattern = "{pattern}"
+                search_path = "{search_path}"
 
-full_pattern = os.path.join(search_path, pattern)
-matches = glob.glob(full_pattern, recursive=True)
-files = [f for f in matches if os.path.isfile(f)]
+                full_pattern = os.path.join(search_path, pattern)
+                matches = glob.glob(full_pattern, recursive=True)
+                files = [f for f in matches if os.path.isfile(f)]
 
-try:
-    files_with_mtime = [(f, os.path.getmtime(f)) for f in files]
-    sorted_files = sorted(files_with_mtime, key=lambda x: x[1], reverse=True)
-    for f, _ in sorted_files:
-        print(f)
-except Exception as e:
-    for f in files:
-        print(f)
-'''
+                try:
+                    files_with_mtime = [(f, os.path.getmtime(f)) for f in files]
+                    sorted_files = sorted(files_with_mtime, key=lambda x: x[1], reverse=True)
+                    for f, _ in sorted_files:
+                        print(f)
+                except Exception as e:
+                    for f in files:
+                        print(f)
+            ''')
 
             # Encode as base64 to safely pass multi-line code to shell
-            import base64
             encoded_code = base64.b64encode(glob_code.encode()).decode()
             cmd = f'python3 -c "import base64; exec(base64.b64decode(\'{encoded_code}\').decode())"'
 

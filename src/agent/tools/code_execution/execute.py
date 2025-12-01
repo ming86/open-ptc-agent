@@ -138,8 +138,13 @@ def create_execute_code_tool(sandbox: Any, mcp_registry: Any):
                     # LLMs sometimes use absolute paths despite prompt instructions
                     if not uploaded_images:
                         try:
-                            # Try to list files in /results/ at root (common LLM mistake)
-                            root_results = await asyncio.to_thread(sandbox.list_directory, "/results")
+                            # Call Daytona SDK directly to avoid debug log in list_directory
+                            # (list_directory logs at debug level when directory doesn't exist)
+                            root_results_raw = await asyncio.to_thread(sandbox.sandbox.fs.list_files, "/results")
+                            root_results = [
+                                {"name": str(f.name) if hasattr(f, 'name') else str(f)}
+                                for f in (root_results_raw or [])
+                            ]
                             for file_info in root_results:
                                 file_name = file_info.get("name", "")
                                 ext = Path(file_name).suffix.lower()

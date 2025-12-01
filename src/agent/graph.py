@@ -5,12 +5,6 @@ This module provides the compiled LangGraph agent for deployment:
 - Single node wrapper around the PTCAgent deepagent
 - Compatible with LangGraph Cloud deployment
 
-Usage in langgraph.json:
-    {
-        "graphs": {
-            "ptc-agent": "src/agent/graph.py:agent"
-        }
-    }
 """
 
 import asyncio
@@ -77,7 +71,7 @@ async def ptc_node(state: MessagesState):
     inner_agent = ptc_agent.create_agent(
         sandbox=session.sandbox,
         mcp_registry=session.mcp_registry,
-        subagent_names=["research"],
+        subagent_names=["general-purpose"],
     )
 
     # Run the full agent (deepagent handles its own tool loop)
@@ -94,6 +88,3 @@ workflow.add_edge("ptc", END)
 
 # Compile the graph for LangGraph deployment
 agent = workflow.compile()
-
-# Legacy alias for backward compatibility
-codeact_node = ptc_node
