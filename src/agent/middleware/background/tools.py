@@ -36,19 +36,14 @@ def create_wait_tool(middleware: "BackgroundSubagentMiddleware") -> StructuredTo
         task_number: int | None = None,
         timeout: float = 60.0,
     ) -> str:
-        """Wait for background subagent(s) to complete and get their results.
-
-        Use this tool when you want to:
-        - Get results from a specific subagent: wait(task_number=1)
-        - Wait for all subagents: wait()
+        """Wait for background task(s) to complete.
 
         Args:
-            task_number: Optional task number (Task-1 = 1, Task-2 = 2, etc.).
-                        If None, waits for ALL pending tasks.
-            timeout: Maximum seconds to wait (default: 60)
+            task_number: Task number (1, 2, ...) or None for all
+            timeout: Max seconds (default: 60)
 
         Returns:
-            Results from the subagent(s)
+            Task result(s)
         """
         registry = middleware.registry
 
@@ -112,17 +107,13 @@ def create_task_progress_tool(registry: "BackgroundTaskRegistry") -> StructuredT
     """
 
     async def task_progress(task_number: int | None = None) -> str:
-        """Check the progress of background subagent tasks.
-
-        Shows: status (running/completed), tool calls made, current activity,
-        and elapsed time for each task.
+        """Check background task progress.
 
         Args:
-            task_number: Optional task number (1, 2, 3...).
-                        If None, shows progress for all tasks.
+            task_number: Task number or None for all
 
         Returns:
-            Progress information for the task(s)
+            Status, tool calls, elapsed time
         """
         if task_number is not None:
             task = await registry.get_by_number(task_number)

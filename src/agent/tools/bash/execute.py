@@ -26,66 +26,22 @@ def create_execute_bash_tool(sandbox: Any):
         run_in_background: Optional[bool] = False,
         working_dir: Optional[str] = "/home/daytona",
     ) -> str:
-        """Executes bash commands in a persistent shell session with proper handling and security measures.
+        """Execute bash commands in a persistent shell session.
 
-        IMPORTANT: This tool is for terminal operations like git, npm, docker, etc.
-        DO NOT use it for file operations (reading, writing, editing, searching, finding files)
-        - use the specialized tools for those instead.
+        Use for: git, npm, docker, system commands, directory operations
+        NOT for: reading/writing/editing files - use Read/Write/Edit tools instead
 
         Args:
             command: The bash command to execute
-            description: Clear, concise description of what this command does (5-10 words, in active voice)
-                        Examples: "List files in current directory", "Show working tree status"
-            timeout: Optional timeout in milliseconds (max 600000 = 10 minutes, default 120000 = 2 minutes)
-            run_in_background: Set to true to run this command in the background
-            working_dir: Working directory for command execution (default: current directory)
-                        Note: Try to maintain working directory using absolute paths instead of cd
+            description: Brief description (5-10 words, active voice)
+            timeout: Milliseconds (default: 120000, max: 600000)
+            run_in_background: Run asynchronously (default: False)
+            working_dir: Working directory (default: /home/daytona)
 
         Returns:
-            Command output (stdout and stderr), or ERROR message if execution failed.
+            Command output (stdout/stderr), or ERROR message
 
-        Path Handling:
-            IMPORTANT: Always quote paths with spaces using double quotes
-            cd "/Users/name/My Documents"      # Correct
-            python "/path/with spaces/script.py"  # Correct
-
-        Workspace Paths:
-            Working directory: /home/daytona
-            Standard directories: /home/daytona/{results,data,tools,code}/
-
-            Accessing workspace files:
-            ls /home/daytona/results/              # Correct - absolute path
-            cat /home/daytona/data/output.json    # Correct - absolute path
-            ls results/                            # Correct - relative to working_dir
-
-            NEVER use root-level paths like /results/ or /data/ - they don't exist!
-
-        Command Chaining:
-            Sequential with dependency (use &&) - All commands must succeed
-            mkdir new_dir && cd new_dir && touch file.txt
-
-            Sequential without dependency (use ;) - Run regardless of previous command
-            echo "start"; sleep 5; echo "end"
-
-            NEVER use newlines to separate commands (newlines OK inside quoted strings)
-
-        Use THIS tool for:
-        - Terminal operations (git, npm, docker, uv, pytest)
-        - Package installation: Use 'uv pip install <package>' for fast installs
-        - Directory operations (ls, mkdir, rmdir, file listing)
-        - File discovery and search (find, locate)
-        - File metadata (stat, file, wc -l)
-        - File operations (cp, mv, chmod, rm)
-        - System commands and utilities (grep, sed, awk, cut, du)
-        - Text processing with Unix tools
-        - Building and testing
-
-        DO NOT use for file operations - use specialized tools instead:
-        - Reading files → Use Read tool
-        - Writing files → Use Write tool
-        - Editing files → Use Edit tool
-        - Finding files by pattern → Use Glob tool
-        - Searching file contents → Use Grep tool
+        Paths: Quote paths with spaces. Use /home/daytona/ for workspace files.
         """
         try:
             logger.info(

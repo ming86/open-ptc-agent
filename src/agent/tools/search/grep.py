@@ -35,76 +35,26 @@ def create_grep_tool(sandbox: Any):
         head_limit: Optional[int] = None,
         offset: int = 0,
     ) -> str:
-        """Search for patterns in files using ripgrep.
+        """Search file contents using ripgrep regex.
 
-        ALWAYS use Grep for search tasks. NEVER invoke `grep` or `rg` via Bash command.
-        This tool has been optimized for correct permissions and access.
-
-        Supports full regex syntax, file filtering, and multiple output modes.
+        Use for: Content search in files
+        NOT for: bash grep/rg commands
 
         Args:
-            pattern: Regex pattern to search for
-            path: Directory or file to search in (default: ".")
-            output_mode: "content", "files_with_matches", or "count"
-            glob: File pattern filter (e.g., "*.py")
-            type: File type filter (e.g., "py", "js")
-            i: Case insensitive search (alias: case_insensitive)
-            n: Show line numbers (alias: show_line_numbers)
-            A: Lines after match (alias: lines_after)
-            B: Lines before match (alias: lines_before)
-            C: Lines of context (alias: lines_context)
-            multiline: Enable multiline mode where . matches newlines (default: False)
-            head_limit: Limit output to first N lines/entries (default: None for unlimited)
-            offset: Skip first N lines/entries before applying head_limit (default: 0)
+            pattern: Regex pattern to search
+            path: Directory or file (default: ".")
+            output_mode: "files_with_matches" | "content" | "count"
+            glob: File filter (e.g., "*.py")
+            type: File type (e.g., "py", "js")
+            i: Case insensitive
+            n: Show line numbers
+            A/B/C: Lines after/before/context
+            multiline: Pattern spans lines
+            head_limit: Limit results
+            offset: Skip first N results
 
         Returns:
-            Search results in the specified format, or error message if operation failed.
-
-        Pattern Syntax (Regex):
-            .       - Any character
-            .*      - Zero or more of any character
-            \\s     - Whitespace
-            \\w     - Word character
-            \\d     - Digit
-            [...]   - Character class
-            \\{     - Literal brace (escaped for ripgrep)
-
-        Examples:
-            Find files containing "PTCAgent":
-            pattern = "PTCAgent"
-
-            Find with file content:
-            pattern = "PTCAgent"
-            output_mode = "content"
-
-            Case-insensitive search:
-            pattern = "error"
-            output_mode = "content"
-            i = True
-
-            Search only Python files:
-            pattern = "async def"
-            type = "py"
-            output_mode = "content"
-
-            Search with glob pattern:
-            pattern = "import.*mcp"
-            glob = "*.py"
-            output_mode = "content"
-
-            Search with context lines:
-            pattern = "class.*Agent"
-            output_mode = "content"
-            C = 3
-
-            Multiline search:
-            pattern = "class.*\\{[\\s\\S]*?def.*init"
-            multiline = True
-            output_mode = "content"
-
-            Count occurrences:
-            pattern = "TODO"
-            output_mode = "count"
+            Search results or ERROR
         """
         try:
             # Normalize virtual path to absolute sandbox path

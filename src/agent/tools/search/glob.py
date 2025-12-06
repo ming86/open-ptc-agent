@@ -21,43 +21,16 @@ def create_glob_tool(sandbox: Any):
 
     @tool
     async def glob(pattern: str, path: Optional[str] = None) -> str:
-        """Fast file pattern matching tool for finding files by name patterns.
+        """Find files matching a glob pattern.
 
-        Works with any codebase size. Supports glob patterns like "**/*.js", "src/**/*.ts", "*.py".
-        Returns matching file paths sorted by modification time.
-
-        Use this tool when you need to find files by name patterns. For content-based searches,
-        use the Grep tool instead.
+        Use for: Finding files by name. For content search, use Grep.
 
         Args:
-            pattern: Glob pattern to match files against
-                    Examples: "**/*.py", "src/**/*.ts", "*.{js,ts}", "**/test_*.py"
-            path: Optional directory to search in (defaults to current working directory if not specified).
-                  IMPORTANT: Omit this parameter for default directory - don't enter "undefined" or "null"
+            pattern: Glob pattern (e.g., "**/*.py", "*.{js,ts}")
+            path: Search directory (default: current directory)
 
         Returns:
-            Matching file paths sorted by modification time, or error message if operation failed.
-
-        Pattern Syntax:
-            *       - Match anything except /
-            **      - Match zero or more directories
-            ?       - Match single character
-            [...]   - Match character range
-            {a,b}   - Match either pattern
-
-        Examples:
-            Find all Python files recursively:
-            pattern = "**/*.py"
-
-            Find all TypeScript files in src directory:
-            pattern = "src/**/*.ts"
-            path = "."
-
-            Find all config files:
-            pattern = "**/*.{yaml,yml,json}"
-
-            Find test files:
-            pattern = "**/test_*.py"
+            Matching file paths sorted by modification time, or ERROR
         """
         try:
             # Normalize virtual path to absolute sandbox path

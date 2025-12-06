@@ -21,35 +21,15 @@ def create_filesystem_tools(sandbox: Any) -> tuple:
 
     @tool
     async def read_file(file_path: str, offset: Optional[int] = None, limit: Optional[int] = None) -> str:
-        """Reads a file from the local filesystem.
-
-        You can access any file directly by using this tool. Returns file contents with
-        line numbers in cat -n format (starting at line 1).
-
-        By default, it reads up to 2000 lines starting from the beginning of the file.
-        You can optionally specify a line offset and limit (especially handy for long files).
+        """Read a file with line numbers (cat -n format).
 
         Args:
-            file_path: Path to the file (relative to working directory or absolute)
-                      Example: "results/data.csv" or "/results/data.csv"
-            offset: Line number to start reading from (1-indexed, optional, for large files)
-            limit: Number of lines to read (optional, for large files)
+            file_path: Path to file (relative or absolute)
+            offset: Start line, 1-indexed (optional)
+            limit: Number of lines (optional)
 
         Returns:
-            File contents with line numbers in cat -n format, or ERROR message if file not found.
-            Line number format: spaces + line_number + → + content
-
-        Example:
-            Read entire file:
-            file_path = "config.yaml"
-
-            Read specific lines (line 100-150):
-            file_path = "src/agent.py"
-            offset = 100
-            limit = 50
-
-            Read a generated output:
-            file_path = "results/analysis.txt"
+            File contents with line numbers, or ERROR
         """
         try:
             # Normalize virtual path to absolute sandbox path
@@ -102,30 +82,16 @@ def create_filesystem_tools(sandbox: Any) -> tuple:
 
     @tool
     async def write_file(file_path: str, content: str) -> str:
-        """Writes a file to the local filesystem.
+        """Write content to a file. Overwrites existing.
 
-        This tool will overwrite the existing file if there is one at the provided path.
-        ALWAYS prefer editing existing files with Edit tool over Write. Never write new files
-        unless explicitly required.
-
-        If this is an existing file, you MUST use the Read tool first to read the file's contents.
+        Use Read tool first for existing files. Prefer Edit over Write.
 
         Args:
-            file_path: Path to the file (relative to working directory or absolute)
-                      Example: "results/output.txt" or "/results/output.txt"
-            content: Complete content to write to the file
+            file_path: Path to file
+            content: Content to write
 
         Returns:
-            Confirmation message, or ERROR message if operation failed.
-
-        Example:
-            Create a new file:
-            file_path = "results/summary.txt"
-            content = "Analysis complete. Found 42 matches."
-
-            Create a JSON configuration:
-            file_path = "config.json"
-            content = '{"setting": "value", "enabled": true}'
+            Confirmation or ERROR
         """
         try:
             # Normalize virtual path to absolute sandbox path
@@ -163,55 +129,18 @@ def create_filesystem_tools(sandbox: Any) -> tuple:
 
     @tool
     async def edit_file(file_path: str, old_string: str, new_string: str, replace_all: bool = False) -> str:
-        """Performs exact string replacements in files (Claude Code standard).
-
-        You must use the Read tool at least once before editing. This tool will error if you
-        attempt an edit without reading the file.
-
-        When editing text from Read tool output, ensure you preserve the exact indentation
-        (tabs/spaces) as it appears AFTER the line number prefix. The line number prefix format
-        is: spaces + line number + → + content. Everything after the arrow is the actual file
-        content to match. Never include any part of the line number prefix in old_string or new_string.
-
-        ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
-
-        The edit will FAIL if old_string is not unique in the file. Either provide a larger string
-        with more surrounding context to make it unique or use replace_all to change every instance
-        of old_string.
-
-        Use replace_all for replacing and renaming strings across the file. This parameter is useful
-        if you want to rename a variable for instance.
+        """Replace exact string in a file. Must Read file first.
 
         Args:
-            file_path: Path to the file (relative to working directory or absolute)
-            old_string: The exact text to replace (must exist and be unique unless replace_all=True)
-            new_string: The text to replace it with (must be different from old_string)
+            file_path: Path to file
+            old_string: Text to find (must be unique unless replace_all)
+            new_string: Replacement text
             replace_all: Replace all occurrences (default: False)
 
         Returns:
-            Confirmation message, or ERROR message if operation failed.
+            Confirmation or ERROR
 
-        Example:
-            Single replacement - modify a function:
-            file_path = "src/agent.py"
-            old_string = "def old_function():\\n    pass"
-            new_string = "def old_function():\\n    return True"
-
-            Replace all occurrences - rename a variable:
-            file_path = "src/agent.py"
-            old_string = "old_var_name"
-            new_string = "new_var_name"
-            replace_all = True
-
-            Multi-line replacement with exact indentation:
-            file_path = "config.yaml"
-            old_string = "llm:\\n  name: \\"claude-sonnet\\"\\n  temperature: 0.7"
-            new_string = "llm:\\n  name: \\"gpt-4o\\"\\n  temperature: 0.5"
-
-            Add new lines to existing code:
-            file_path = "src/agent.py"
-            old_string = "    def __init__(self):\\n        pass"
-            new_string = "    def __init__(self):\\n        self.name = \\"agent\\"\\n        self.version = \\"1.0\\""
+        Note: Preserve exact indentation from Read output. Exclude line number prefix.
         """
         try:
             # Normalize virtual path to absolute sandbox path

@@ -288,37 +288,15 @@ def create_view_image_tool(sandbox: Optional[Any] = None):
         base64_images: Optional[list[str]] = None,
         sandbox_paths: Optional[list[str]] = None,
     ) -> str:
-        """
-        View one or more images for visual analysis.
-
-        Use this tool when you need to examine images from URLs, base64 encoded data,
-        or files in the sandbox filesystem.
+        """Load images for visual analysis.
 
         Args:
-            urls: List of image URLs to view. Supports HTTPS URLs pointing to JPEG, PNG, GIF, or WebP images.
-            base64_images: List of base64 encoded images. Can include or omit the data URI prefix
-                          (e.g., "data:image/png;base64,..."). If omitted, PNG format is assumed.
-            sandbox_paths: List of file paths in the sandbox to view (e.g., ["results/chart.png"]).
-                          Images will be read from the sandbox and displayed.
+            urls: Image URLs (HTTPS, JPEG/PNG/GIF/WebP)
+            base64_images: Base64-encoded images
+            sandbox_paths: Sandbox file paths (e.g., results/chart.png)
 
         Returns:
-            Confirmation message. The actual images will be available for viewing after this tool completes.
-
-        Examples:
-            # View a single image from URL
-            view_image(urls=["https://example.com/chart.png"])
-
-            # View multiple images
-            view_image(urls=["https://example.com/img1.jpg", "https://example.com/img2.jpg"])
-
-            # View base64 encoded image
-            view_image(base64_images=["iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="])
-
-            # View image from sandbox filesystem
-            view_image(sandbox_paths=["results/chart.png", "results/visualization.jpg"])
-
-            # Mix URLs, base64, and sandbox paths
-            view_image(urls=["https://example.com/chart.png"], sandbox_paths=["results/local.png"])
+            Confirmation message. Images available after tool completes.
         """
         # Count total images
         url_count = len(urls) if urls else 0

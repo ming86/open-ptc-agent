@@ -30,44 +30,18 @@ def create_execute_code_tool(sandbox: Any, mcp_registry: Any):
 
     @tool
     async def execute_code(code: str) -> str:
-        """Execute Python code in the sandbox environment.
+        """Execute Python code in the sandbox.
 
-        Use this tool for complex operations that require Python logic, data processing,
-        or interactions with MCP tools (tavily, github, etc.).
-
-        The code executes in an isolated sandbox with:
-        - MCP tools available via: from tools.{server_name} import {tool_name}
-        - Workspace directories: results/, data/, tools/, code/
-        - Python standard library and common packages (pandas, requests, etc.)
-        - Missing packages: Use Bash tool with 'uv pip install <package>' for fast installation
-
-        Path Guidelines:
-            Use RELATIVE paths for standard directories:
-            with open('results/output.json', 'w') as f:  # Correct
-            with open('data/temp.json', 'w') as f:      # Correct
-
-            NEVER use absolute paths like '/results/' or '/workspace/' - they won't work!
+        Use for: Complex operations, data processing, MCP tool calls
+        Import MCP tools: from tools.{server} import {tool}
 
         Args:
-            code: Complete Python code to execute. Must be self-contained.
-                  Print a summary of results (not full data) to stdout.
+            code: Python code to execute. Print summary to stdout.
 
         Returns:
-            Execution result containing SUCCESS/ERROR status, stdout, stderr, and files created.
+            SUCCESS with stdout/files, or ERROR with stderr
 
-        Example:
-            code = '''
-            from tools.tavily import tavily_search
-            import json
-
-            results = tavily_search(query="AI agents", max_results=5)
-            filtered = [r for r in results if r.get('score', 0) > 0.7]
-
-            with open('results/output.json', 'w') as f:
-                json.dump(filtered, f, indent=2)
-
-            print(f"Saved {len(filtered)} high-quality results")
-            '''
+        Paths: Use RELATIVE paths (results/, data/). Never /results/ or /workspace/.
         """
         if not sandbox:
             return "ERROR: Sandbox not initialized"
