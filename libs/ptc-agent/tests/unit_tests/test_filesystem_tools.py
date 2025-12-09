@@ -1,28 +1,12 @@
 """Tests for filesystem tools."""
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
-from src.agent.tools.filesystem import create_filesystem_tools
 
+from ptc_agent.agent.tools.file_ops import create_filesystem_tools
 
-@pytest.fixture
-def mock_sandbox():
-    """Create a mock sandbox for testing."""
-    sandbox = Mock()
-    sandbox.config = Mock()
-    sandbox.config.filesystem = Mock()
-    sandbox.config.filesystem.enable_path_validation = True
-    sandbox.config.filesystem.allowed_directories = ["/home/daytona", "/tmp"]
-    # Add normalize_path mock that returns the path as-is
-    sandbox.normalize_path = Mock(side_effect=lambda x: x)
-    # Pre-create mock placeholders (tests will override with specific return values)
-    # These are now sync methods called via asyncio.to_thread()
-    sandbox.read_file = Mock()
-    sandbox.read_file_range = Mock()
-    sandbox.write_file = Mock()
-    sandbox.edit_file = Mock()
-
-    return sandbox
+# Use mock_sandbox from conftest.py - provides a pre-configured mock sandbox
 
 
 class TestReadFileTool:

@@ -11,7 +11,8 @@ from datetime import datetime
 
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add repo root to path to enable importing mcp_servers
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import all tools from the MCP server
 from mcp_servers.yfinance_mcp_server import (

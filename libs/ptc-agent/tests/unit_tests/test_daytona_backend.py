@@ -1,8 +1,10 @@
 """Tests for DaytonaBackend."""
 
-import pytest
 from unittest.mock import Mock
-from src.agent.backends.daytona import DaytonaBackend
+
+import pytest
+
+from ptc_agent.agent.backends.daytona import DaytonaBackend
 
 
 @pytest.fixture
